@@ -8,10 +8,14 @@ MEAN = (0.4914, 0.4822, 0.4465)
 STD = (0.2470, 0.2435, 0.2616)
 
 
-def dataset(train, root=DATA_ROOT):
+def dataset(train, root=DATA_ROOT, augment=None):
+    if augment is None:
+        augment = train
+
     augmentation = (
-        [transforms.RandomCrop(32, padding=4), transforms.RandomHorizontalFlip()]
-        if train else []
+        [transforms.RandomCrop(32, padding=4),
+         transforms.RandomHorizontalFlip()]
+        if augment else []
     )
     transform = transforms.Compose(
         augmentation + [transforms.ToTensor(), transforms.Normalize(MEAN, STD)]
@@ -67,7 +71,9 @@ class TrainingBatches:
             return next(iter(loader))
 
 
-def evaluation_loader(config, root=DATA_ROOT):
-    data = dataset(False, root)
-    subset = Subset(data, range(min(config.test_limit, len(data))))
+def evaluation_loader(config, root=DATA_ROOT, train=False):
+    data = dataset(train, root, augment=False)
+    limit = config.train_limit if train else config.test_limit
+    subset = Subset(data, range(min(limit, len(data))))
     return DataLoader(subset, batch_size=256, num_workers=0)
+

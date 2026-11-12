@@ -60,6 +60,11 @@ class ParameterServer:
         )
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.epochs)
         test_loader = evaluation_loader(config, root=os.getenv("DATA_ROOT", "/data/cifar10"))
+        train_loader = evaluation_loader(
+            config,
+            root=os.getenv("DATA_ROOT", "/data/cifar10"),
+            train=True,
+        )
         eval_device = torch.device(os.getenv("GC_EVAL_DEVICE", os.getenv("GC_DEVICE", "cpu")))
         eval_model = build_model().to(eval_device)
         steps_per_epoch = config.train_limit // config.num_partitions // config.batch_size
@@ -122,6 +127,14 @@ class ParameterServer:
 
             train_time_s = time.perf_counter() - epoch_start
             eval_started = time.perf_counter()
+            # Training objective on the actual SGD model
+            train_eval_loss = None
+
+            if (epoch + 1) % 5 == 0 or epoch == 0:
+                eval_model.load_state_dict(model.state_dict())
+                train_eval_loss, _ = evaluate(eval_model, train_loader, eval_device)
+
+            # Existing evaluation of the EMA model
             eval_model.load_state_dict(ema_model.module.state_dict())
             test_loss, test_accuracy = evaluate(eval_model, test_loader, eval_device)
             if eval_device.type == "mps":
@@ -135,6 +148,7 @@ class ParameterServer:
                 "train_time_s": train_time_s,
                 "eval_time_s": eval_time_s,
                 "epoch_time_s": time.perf_counter() - epoch_start,
+                "train_eval_loss": train_eval_loss,
             }
             write_jsonl(results / "epoch_metrics.jsonl", record)
             print(json.dumps(record), flush=True)

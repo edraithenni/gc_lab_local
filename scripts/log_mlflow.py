@@ -111,6 +111,7 @@ def import_run(directory, client, experiment_id, device):
             add_metric(metric_rows, "quality/test_accuracy", row.get("test_accuracy"), epoch, stamp)
             add_metric(metric_rows, "quality/test_loss", row.get("test_loss"), epoch, stamp)
             add_metric(metric_rows, "quality/train_loss_reported", row.get("train_loss"), epoch, stamp)
+            add_metric(metric_rows, "quality/train_eval_loss", row.get("train_eval_loss"), epoch, stamp)
             add_metric(metric_rows, "time/epoch_s", row.get("epoch_time_s"), epoch, stamp)
             add_metric(metric_rows, "time/cumulative_epoch_s", elapsed, epoch, stamp)
         selected = Counter()
