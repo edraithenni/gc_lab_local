@@ -1,0 +1,15 @@
+# Датасет, результаты обучения, база MLflow и другие локальные данные
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Виртуальные окружения
+.venv/
+.venv-*/
+
+# IDE и macOS
+.idea/
+.DS_Store
